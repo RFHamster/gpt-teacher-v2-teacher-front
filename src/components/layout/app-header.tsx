@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useCurrentUser, useLogout } from "@/features/auth";
 import { useRouter } from "next/navigation";
 import { routes } from "@/config/routes";
+import { ThemeToggle } from "./theme-toggle";
 
 export function AppHeader() {
   const { data: user } = useCurrentUser();
@@ -18,6 +19,7 @@ export function AppHeader() {
         <span className="text-sm font-semibold">GPT Teacher</span>
       </div>
       <div className="flex flex-1 items-center justify-end gap-2">
+        <ThemeToggle />
         <Button variant="ghost" size="sm" aria-label="Notificações">
           <Bell className="h-4 w-4" />
         </Button>
