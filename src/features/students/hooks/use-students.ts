@@ -30,6 +30,9 @@ export function useInviteStudents(disciplineId: string) {
   return useMutation({
     mutationFn: (input: Omit<InviteStudentsInput, "disciplineId">) =>
       studentService.invite({ ...input, disciplineId }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: keys.byDiscipline(disciplineId) }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: keys.byDiscipline(disciplineId) });
+      qc.invalidateQueries({ queryKey: ["disciplines"] });
+    },
   });
 }

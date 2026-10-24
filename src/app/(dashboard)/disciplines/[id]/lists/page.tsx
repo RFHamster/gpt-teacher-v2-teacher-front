@@ -15,7 +15,7 @@ export default function DisciplineListsPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
-  const { data, isLoading } = useListsByDiscipline(id);
+  const { data, isLoading, isError, error } = useListsByDiscipline(id);
   const [filter, setFilter] = useState<"all" | "active" | "closed" | "draft">("all");
   const [createOpen, setCreateOpen] = useState(false);
 
@@ -45,6 +45,13 @@ export default function DisciplineListsPage({
 
       {isLoading ? (
         <Skeleton className="h-64" />
+      ) : isError ? (
+        <div className="rounded-md border border-red-300 bg-red-50 p-4 text-sm text-red-700 dark:border-red-800 dark:bg-red-950/20 dark:text-red-400">
+          <p className="font-semibold">Erro ao carregar listas</p>
+          <p className="mt-1 font-mono text-xs opacity-80">
+            {(error as Error)?.message ?? String(error)}
+          </p>
+        </div>
       ) : filtered.length > 0 ? (
         <Card>
           <CardContent className="p-0">

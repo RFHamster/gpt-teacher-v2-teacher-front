@@ -1,7 +1,11 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { disciplineService, type CreateDisciplineInput } from "../services/discipline-service";
+import {
+  disciplineService,
+  type CreateDisciplineInput,
+  type UpdateDisciplineInput,
+} from "../services/discipline-service";
 
 const keys = {
   all: ["disciplines"] as const,
@@ -30,6 +34,25 @@ export function useCreateDiscipline() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (input: CreateDisciplineInput) => disciplineService.create(input),
+    onSuccess: () => qc.invalidateQueries({ queryKey: keys.all }),
+  });
+}
+
+export function useUpdateDiscipline(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: UpdateDisciplineInput) => disciplineService.update(id, input),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: keys.all });
+      qc.invalidateQueries({ queryKey: keys.byId(id) });
+    },
+  });
+}
+
+export function useDeleteDiscipline() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => disciplineService.delete(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: keys.all }),
   });
 }

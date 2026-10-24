@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { GraduationCap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,7 +29,10 @@ export function LoginForm() {
     }
     login.mutate(
       { email, password },
-      { onSuccess: () => router.push(routes.dashboard) },
+      {
+        onSuccess: ({ role }) =>
+          router.push(role === "student" ? routes.studentDashboard : routes.dashboard),
+      },
     );
   }
 
@@ -121,6 +125,15 @@ export function LoginForm() {
             </button>
           )}
         </form>
+      )}
+
+      {!forgotMode && !resetSent && (
+        <p className="text-center text-xs text-muted-foreground">
+          Não tem conta?{" "}
+          <Link href={routes.register} className="underline hover:text-foreground">
+            Criar conta de professor
+          </Link>
+        </p>
       )}
 
       {!forgotMode && !resetSent && (

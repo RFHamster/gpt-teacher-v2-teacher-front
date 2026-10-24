@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BookOpen, GraduationCap, LayoutDashboard, Settings } from "lucide-react";
+import { BookMarked, BookOpen, GraduationCap, LayoutDashboard, Settings } from "lucide-react";
 import { cn } from "@/utils/cn";
 import { routes } from "@/config/routes";
 import { siteConfig } from "@/config/site";
@@ -10,6 +10,7 @@ import { siteConfig } from "@/config/site";
 const items = [
   { href: routes.dashboard, label: "Dashboard", icon: LayoutDashboard },
   { href: routes.disciplines, label: "Disciplinas", icon: BookOpen },
+  { href: routes.bankProblems, label: "Banco de Questões", icon: BookMarked },
   { href: routes.settings, label: "Configurações", icon: Settings },
 ];
 

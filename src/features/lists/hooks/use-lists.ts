@@ -31,6 +31,7 @@ export function useListMatrix(listId: string | undefined) {
     queryKey: listId ? keys.matrix(listId) : ["lists", "none"],
     queryFn: () => listService.matrix(listId!),
     enabled: !!listId,
+    gcTime: 0,
   });
 }
 
@@ -59,5 +60,25 @@ export function useUpdateDeadline(listId: string) {
       qc.invalidateQueries({ queryKey: keys.byId(listId) });
       qc.invalidateQueries({ queryKey: keys.matrix(listId) });
     },
+  });
+}
+
+export function useUpdateList(disciplineId: string, listId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: import("../services/list-service").UpdateListInput) =>
+      listService.update(listId, input),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: keys.byDiscipline(disciplineId) });
+      qc.invalidateQueries({ queryKey: keys.byId(listId) });
+    },
+  });
+}
+
+export function useDeleteList(disciplineId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (listId: string) => listService.delete(listId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: keys.byDiscipline(disciplineId) }),
   });
 }

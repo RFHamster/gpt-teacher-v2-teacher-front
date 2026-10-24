@@ -17,7 +17,7 @@ export function useLogin() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (input: LoginInput) => authService.login(input),
-    onSuccess: (data) => qc.setQueryData(keys.me, data),
+    onSuccess: ({ user }) => qc.setQueryData(keys.me, user),
   });
 }
 
@@ -25,7 +25,7 @@ export function useSsoLogin() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: authService.loginWithSSO,
-    onSuccess: (data) => qc.setQueryData(keys.me, data),
+    onSuccess: ({ user }) => qc.setQueryData(keys.me, user),
   });
 }
 

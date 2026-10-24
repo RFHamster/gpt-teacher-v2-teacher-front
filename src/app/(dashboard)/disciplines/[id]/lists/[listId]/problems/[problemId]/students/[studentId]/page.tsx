@@ -18,7 +18,7 @@ export default function SubmissionAnalysisPage({
 }) {
   const { id, listId, problemId, studentId } = use(params);
   const { data: discipline } = useDiscipline(id);
-  const { data, isLoading } = useSubmissionDetail(listId, problemId, studentId);
+  const { data, isLoading } = useSubmissionDetail(id, listId, problemId, studentId);
   const searchParams = useSearchParams();
   const axis = searchParams.get("axis") === "problems" ? "problems" : "students";
 

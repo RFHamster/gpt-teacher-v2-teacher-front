@@ -96,6 +96,10 @@ export interface SubmissionDetail extends SubmissionCell {
   messages: SessionMessage[];
   /** Anotação do professor para esta cell (aluno+exercício) */
   teacherNote?: string;
+  /** ID da sessão encerrada (para salvar devolutiva) */
+  sessionId?: string;
+  /** Devolutiva do professor para o aluno */
+  teacherFeedback?: string;
 }
 
 /** Estado de qualquer análise gerada por IA */

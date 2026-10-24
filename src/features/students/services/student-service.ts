@@ -1,5 +1,4 @@
-import { mockResponse, mockId, nowIso, delay } from "@/lib/mocks/utils";
-import { studentsByDiscipline } from "@/lib/mocks/fixtures";
+import { api } from "@/lib/api/client";
 import type { Student } from "@/types/entities";
 
 export interface InviteStudentsInput {
@@ -10,46 +9,70 @@ export interface InviteStudentsInput {
 export interface InviteStudentsResult {
   invited: Student[];
   duplicatesIgnored: string[];
+  tempPassword: string;
 }
 
-const store: Record<string, Student[]> = { ...studentsByDiscipline };
+interface StudentPublic {
+  id: string;
+  email: string;
+  name: string;
+  registration_number?: string | null;
+}
+
+function generateTempPassword(): string {
+  const chars = "ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
+  return Array.from({ length: 12 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
+}
+
+function mapStudent(s: StudentPublic): Student {
+  return {
+    id: s.id,
+    name: s.name ?? null,
+    email: s.email,
+    status: "active",
+    createdAt: new Date().toISOString(),
+  };
+}
 
 export const studentService = {
-  byDiscipline: (disciplineId: string) =>
-    mockResponse<Student[]>(store[disciplineId] ?? [], 250),
+  byDiscipline: async (disciplineId: string): Promise<Student[]> => {
+    const { data } = await api.get<StudentPublic[]>(`/classrooms/${disciplineId}/students`);
+    return data.map(mapStudent);
+  },
 
   byId: async (disciplineId: string, studentId: string): Promise<Student> => {
-    const list = store[disciplineId] ?? [];
-    const found = list.find((s) => s.id === studentId);
+    const { data } = await api.get<StudentPublic[]>(`/classrooms/${disciplineId}/students`);
+    const found = data.find((s) => s.id === studentId);
     if (!found) throw new Error("Aluno não encontrado nesta disciplina");
-    await delay(150);
-    return found;
+    return mapStudent(found);
   },
 
   invite: async (input: InviteStudentsInput): Promise<InviteStudentsResult> => {
-    await delay(450);
-    const existing = store[input.disciplineId] ?? [];
-    const existingEmails = new Set(existing.map((s) => s.email.toLowerCase()));
-    const duplicates: string[] = [];
     const invited: Student[] = [];
-    input.emails.forEach((rawEmail) => {
-      const email = rawEmail.trim().toLowerCase();
-      if (!email) return;
-      if (existingEmails.has(email)) {
-        duplicates.push(email);
-        return;
+    const duplicatesIgnored: string[] = [];
+    const tempPassword = generateTempPassword();
+
+    for (const email of input.emails) {
+      try {
+        // Registra o aluno com senha temporária
+        const { data: newStudent } = await api.post<StudentPublic>("/auth/register/student", {
+          email,
+          name: email.split("@")[0],
+          password: tempPassword,
+        });
+
+        // Adiciona à turma
+        await api.post(`/classrooms/${input.disciplineId}/students`, {
+          student_id: newStudent.id,
+        });
+
+        invited.push(mapStudent(newStudent));
+      } catch {
+        // Email já cadastrado ou já está na turma
+        duplicatesIgnored.push(email);
       }
-      const newStudent: Student = {
-        id: mockId("stu"),
-        name: null,
-        email,
-        status: "pending",
-        createdAt: nowIso(),
-      };
-      invited.push(newStudent);
-      existingEmails.add(email);
-    });
-    store[input.disciplineId] = [...invited, ...existing];
-    return { invited, duplicatesIgnored: duplicates };
+    }
+
+    return { invited, duplicatesIgnored, tempPassword };
   },
 };
