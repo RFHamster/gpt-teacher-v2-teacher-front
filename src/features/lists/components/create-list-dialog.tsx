@@ -79,12 +79,15 @@ export function CreateListDialog({
     return (e: FormEvent) => {
       e.preventDefault();
       if (!name.trim() || selected.length === 0) return;
+      const bankProblems = selected.filter((p) => p.disciplineId === "bank");
+      const classroomProblems = selected.filter((p) => p.disciplineId !== "bank");
       create.mutate(
         {
           name,
           description: description || undefined,
           deadline: publish && deadline ? new Date(deadline).toISOString() : null,
-          problemIds: selected.map((p) => p.id),
+          problemIds: classroomProblems.map((p) => p.id),
+          bankProblemIds: bankProblems.map((p) => p.id),
           publish,
         },
         {
@@ -174,6 +177,9 @@ export function CreateListDialog({
                   >
                     <GripVertical className="h-4 w-4 cursor-grab text-muted-foreground" />
                     <span className="flex-1 text-sm">{p.title}</span>
+                    {p.disciplineId === "bank" && (
+                      <Badge variant="secondary" className="text-xs">Banco</Badge>
+                    )}
                     <Badge variant="outline">{p.difficulty}</Badge>
                     <button
                       type="button"
@@ -212,6 +218,9 @@ export function CreateListDialog({
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm">{p.title}</p>
                       </div>
+                      {p.disciplineId === "bank" && (
+                        <Badge variant="secondary" className="text-xs">Banco</Badge>
+                      )}
                       <Badge variant="outline">{p.difficulty}</Badge>
                       <button
                         type="button"

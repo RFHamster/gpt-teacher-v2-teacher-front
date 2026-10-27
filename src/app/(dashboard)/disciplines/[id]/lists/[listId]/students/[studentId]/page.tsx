@@ -15,7 +15,7 @@ export default function StudentInListPage({
   const { id, listId, studentId } = use(params);
   const { data: discipline } = useDiscipline(id);
   const { data: students } = useStudentsByDiscipline(id);
-  const { data, isLoading } = useStudentInListSummary(listId, studentId);
+  const { data, isLoading } = useStudentInListSummary(id, listId, studentId);
 
   if (isLoading || !data || !discipline) {
     return <Skeleton className="h-96" />;

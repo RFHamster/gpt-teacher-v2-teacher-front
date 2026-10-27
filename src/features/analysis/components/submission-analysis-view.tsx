@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, MessageSquare, Clock4 } from "lucide-react";
+import { ArrowLeft, ArrowRight, MessageSquare, Clock4, Send } from "lucide-react";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,8 +23,8 @@ import type {
 import { CodeViewer } from "./code-viewer";
 import { ConversationTranscript } from "./conversation-transcript";
 import { CellTeacherNote } from "./cell-teacher-note";
-import { AiCorrectionPanel } from "./ai-correction-panel";
-import { AiHintsPanel } from "./ai-hints-panel";
+import { SessionIndicatorsPanel } from "./session-indicators-panel";
+import { useSaveFeedback } from "../hooks/use-analysis";
 
 interface Props {
   discipline: Discipline;
@@ -49,6 +49,16 @@ export function SubmissionAnalysisView({
   axis: defaultAxis = "students",
 }: Props) {
   const router = useRouter();
+  const saveFeedback = useSaveFeedback(discipline.id, problem.id, student.id);
+  const [feedbackText, setFeedbackText] = useState(detail.teacherFeedback ?? "");
+  const [feedbackSaved, setFeedbackSaved] = useState(false);
+
+  async function handleSaveFeedback() {
+    if (!detail.sessionId) return;
+    await saveFeedback.mutateAsync({ sessionId: detail.sessionId, feedback: feedbackText });
+    setFeedbackSaved(true);
+    setTimeout(() => setFeedbackSaved(false), 3000);
+  }
 
   // Encontrar índices para navegação
   const studentIdx = siblingStudents.findIndex((s) => s.id === student.id);
@@ -199,6 +209,31 @@ export function SubmissionAnalysisView({
               />
             </CardContent>
           </Card>
+
+          {detail.sessionId && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm">Devolutiva ao aluno</CardTitle>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-2 pt-0">
+                <textarea
+                  rows={4}
+                  value={feedbackText}
+                  onChange={(e) => setFeedbackText(e.target.value)}
+                  placeholder="Escreva sua devolutiva para o aluno..."
+                  className="w-full resize-y rounded-lg border border-border bg-background px-3 py-2 text-sm leading-relaxed outline-none focus:ring-2 focus:ring-primary/30"
+                />
+                <button
+                  onClick={handleSaveFeedback}
+                  disabled={saveFeedback.isPending || !feedbackText.trim()}
+                  className="flex items-center justify-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+                >
+                  <Send className="h-3 w-3" />
+                  {saveFeedback.isPending ? "Salvando..." : feedbackSaved ? "Salvo!" : "Enviar devolutiva"}
+                </button>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         {/* Coluna 2 - Código entregue */}
@@ -215,17 +250,19 @@ export function SubmissionAnalysisView({
         {/* Coluna 3 - IA + transcript */}
         <Card>
           <CardContent className="pt-4">
-            <Tabs defaultValue="correction">
+            <Tabs defaultValue="indicators">
               <TabsList>
-                <TabsTrigger value="correction">Correção</TabsTrigger>
-                <TabsTrigger value="hints">Dicas</TabsTrigger>
+                <TabsTrigger value="indicators">Indicadores</TabsTrigger>
                 <TabsTrigger value="transcript">Conversa</TabsTrigger>
               </TabsList>
-              <TabsContent value="correction">
-                <AiCorrectionPanel studentId={student.id} problemId={problem.id} />
-              </TabsContent>
-              <TabsContent value="hints">
-                <AiHintsPanel studentId={student.id} problemId={problem.id} />
+              <TabsContent value="indicators">
+                {detail.sessionId ? (
+                  <SessionIndicatorsPanel sessionId={detail.sessionId} />
+                ) : (
+                  <p className="py-4 text-sm text-muted-foreground">
+                    Sessão não disponível para este aluno.
+                  </p>
+                )}
               </TabsContent>
               <TabsContent value="transcript">
                 <ConversationTranscript messages={detail.messages} />

@@ -1,6 +1,7 @@
 export const routes = {
   home: "/",
   login: "/login",
+  register: "/register",
   dashboard: "/dashboard",
   disciplines: "/disciplines",
   discipline: (id: string) => `/disciplines/${id}` as const,
@@ -20,5 +21,12 @@ export const routes = {
     `/disciplines/${disciplineId}/lists/${listId}/students/${studentId}` as const,
   studentProfile: (disciplineId: string, studentId: string) =>
     `/disciplines/${disciplineId}/students/${studentId}` as const,
+  bankProblems: "/bank-problems",
   settings: "/settings",
+
+  // ── Área do aluno ──────────────────────────────────────────────────────────
+  studentDashboard: "/student/dashboard",
+  studentClassroom: (id: string) => `/student/classrooms/${id}` as const,
+  studentProblem: (classroomId: string, problemId: string) =>
+    `/student/classrooms/${classroomId}/problems/${problemId}` as const,
 } as const;

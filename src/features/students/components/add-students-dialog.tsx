@@ -34,7 +34,7 @@ export function AddStudentsDialog({
   const [fileParsed, setFileParsed] = useState<ParsedEmails>(emptyParsed);
   const [fileName, setFileName] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
-  const [result, setResult] = useState<{ invited: number; ignored: number } | null>(null);
+  const [result, setResult] = useState<{ invited: number; ignored: number; tempPassword: string } | null>(null);
 
   const invite = useInviteStudents(disciplineId);
 
@@ -67,7 +67,7 @@ export function AddStudentsDialog({
       { emails: parsed.valid },
       {
         onSuccess: (r) => {
-          setResult({ invited: r.invited.length, ignored: r.duplicatesIgnored.length });
+          setResult({ invited: r.invited.length, ignored: r.duplicatesIgnored.length, tempPassword: r.tempPassword });
         },
       },
     );
@@ -87,8 +87,7 @@ export function AddStudentsDialog({
             <Mails className="h-4 w-4" /> Adicionar alunos
           </DialogTitle>
           <DialogDescription>
-            Convites serão enviados por email. Alunos aparecem como &quot;convite pendente&quot;
-            até concluírem o cadastro.
+            Os alunos serão cadastrados automaticamente com uma senha temporária que você compartilha com eles.
           </DialogDescription>
         </DialogHeader>
 
@@ -96,12 +95,19 @@ export function AddStudentsDialog({
           <div className="flex flex-col gap-4">
             <div className="rounded-md border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-900 dark:border-emerald-900/40 dark:bg-emerald-900/20 dark:text-emerald-200">
               <p className="font-medium">
-                {result.invited} convite{result.invited === 1 ? "" : "s"} enviado
-                {result.invited === 1 ? "" : "s"}!
+                {result.invited} aluno{result.invited === 1 ? "" : "s"} cadastrado
+                {result.invited === 1 ? "" : "s"} e adicionado{result.invited === 1 ? "" : "s"}!
               </p>
+              {result.invited > 0 && (
+                <p className="mt-1 text-xs">
+                  Senha temporária: <strong>{result.tempPassword}</strong>
+                  <br />
+                  Compartilhe com os alunos — eles podem alterar após o primeiro acesso.
+                </p>
+              )}
               {result.ignored > 0 && (
                 <p className="mt-1 text-xs">
-                  {result.ignored} email(s) já estavam na disciplina e foram ignorados.
+                  {result.ignored} email(s) já cadastrados ou já estavam na disciplina.
                 </p>
               )}
             </div>
