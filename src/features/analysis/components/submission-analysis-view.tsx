@@ -23,8 +23,6 @@ import type {
 import { CodeViewer } from "./code-viewer";
 import { ConversationTranscript } from "./conversation-transcript";
 import { CellTeacherNote } from "./cell-teacher-note";
-import { AiCorrectionPanel } from "./ai-correction-panel";
-import { AiHintsPanel } from "./ai-hints-panel";
 import { SessionIndicatorsPanel } from "./session-indicators-panel";
 import { useSaveFeedback } from "../hooks/use-analysis";
 
@@ -255,8 +253,6 @@ export function SubmissionAnalysisView({
             <Tabs defaultValue="indicators">
               <TabsList>
                 <TabsTrigger value="indicators">Indicadores</TabsTrigger>
-                <TabsTrigger value="correction">Correção IA</TabsTrigger>
-                <TabsTrigger value="hints">Dicas</TabsTrigger>
                 <TabsTrigger value="transcript">Conversa</TabsTrigger>
               </TabsList>
               <TabsContent value="indicators">
@@ -267,12 +263,6 @@ export function SubmissionAnalysisView({
                     Sessão não disponível para este aluno.
                   </p>
                 )}
-              </TabsContent>
-              <TabsContent value="correction">
-                <AiCorrectionPanel studentId={student.id} problemId={problem.id} />
-              </TabsContent>
-              <TabsContent value="hints">
-                <AiHintsPanel studentId={student.id} problemId={problem.id} />
               </TabsContent>
               <TabsContent value="transcript">
                 <ConversationTranscript messages={detail.messages} />

@@ -89,8 +89,10 @@ export function useSessionFeedback(sessionId: string | undefined) {
     queryKey: sessionId ? keys.sessionFeedback(sessionId) : ["analysis", "session-feedback", "none"],
     queryFn: () => analysisService.sessionFeedback(sessionId!),
     enabled: !!sessionId,
-    staleTime: 60_000,
-    retry: false,
+    staleTime: 30_000,
+    retry: 3,
+    retryDelay: 2000,
+    refetchInterval: 30_000,
   });
 }
 
@@ -98,6 +100,12 @@ export function useTriggerFeedbackGeneration() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: () => analysisService.triggerFeedbackGeneration(),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["analysis", "session-feedback"] }),
+    onSuccess: () => {
+      // Background task in the feedback service takes a moment to complete.
+      // Delay invalidation so the refetch doesn't race against the async generation.
+      setTimeout(() => {
+        qc.invalidateQueries({ queryKey: ["analysis", "session-feedback"] });
+      }, 2500);
+    },
   });
 }
