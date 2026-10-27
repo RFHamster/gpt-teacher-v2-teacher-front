@@ -50,20 +50,19 @@ export interface SessionFeedbackIndicators {
     label: string;
     idle_minutes: number | null;
   };
-  stuck?: {
-    is_stuck: boolean;
-    reasons: Array<{ type: string; detail: string; snippet?: string }>;
-    student_message_count: number;
-  };
-  answer_seeking?: {
+  session_evaluation?: {
+    resolved: boolean | null;
+    resolution_quality: "complete" | "partial" | "none";
+    code_quality_score: number | null;
+    code_quality_notes: string;
+    help_dependency: "low" | "medium" | "high" | null;
+    help_dependency_notes: string;
+    answer_seeking_detected: boolean | null;
     answer_seeking_count: number;
-    total_student_messages: number;
-    answer_seeking_rate: number;
-    detections: Array<{ message_id: string; snippet: string; matched_pattern: string }>;
-  };
-  error_types?: {
-    total_classified: number;
-    category_counts: Record<string, number>;
+    answer_seeking_notes: string;
+    summary: string;
+    evaluated_by: "llm" | "skipped";
+    error?: string;
   };
 }
 
@@ -162,37 +161,37 @@ export const analysisService = {
       const studentSessions = sessions.filter((s) => s.student_id === studentId);
       const closedSession = studentSessions.find((s) => s.status === "closed");
       const activeSession = studentSessions.find((s) => s.status === "open");
-      const targetSession = closedSession ?? activeSession;
 
-      if (closedSession) cellStatus = "delivered";
-      else if (activeSession) cellStatus = "attempted";
+      if (closedSession || activeSession) cellStatus = "attempted";
+
+      // Sessions chegam ordenadas por created_at DESC (mais nova primeiro).
+      // A MAIS ANTIGA (último elemento) é onde o aluno passou mais tempo conversando —
+      // criar nova sessão fecha a anterior, então a conversa real fica na primeira sessão.
+      // Para indicadores e transcrição usamos a mais antiga; para código entregue
+      // buscamos separadamente qualquer sessão que tenha submitted_code.
+      const targetSession =
+        studentSessions[studentSessions.length - 1] ?? studentSessions[0];
 
       if (targetSession) {
         targetSessionId = targetSession.id;
-        if (targetSession.submitted_code) submittedCode = targetSession.submitted_code;
+        // Código: somente o submitted_code salvo na sessão conta como entregue
+        const submittingSession = studentSessions.find((s) => s.submitted_code);
+        if (submittingSession?.submitted_code) submittedCode = submittingSession.submitted_code;
         if (targetSession.teacher_feedback) teacherFeedback = targetSession.teacher_feedback;
         try {
           const { data: msgs } = await api.get<ChatMessageRaw[]>(
             `/student-session/${targetSession.id}/chat-messages/teacher`,
           );
           sessionMessages = msgs;
-          // Fallback: se não houve entrega formal, usa o último código enviado nas mensagens
-          if (!submittedCode) {
-            const lastUserMsgWithCode = [...msgs].reverse().find((m) => m.type === "user" && m.code);
-            if (lastUserMsgWithCode?.code) submittedCode = lastUserMsgWithCode.code;
-          }
         } catch {
           // mensagens indisponíveis — não impede mostrar o código
         }
       }
+
+      // Apenas submitted_code marca como entregue
+      if (submittedCode) cellStatus = "delivered";
     } catch {
       // sessões indisponíveis
-    }
-
-    // Se temos código mas o status ainda é "not_started", algo falhou silenciosamente
-    // O aluno claramente interagiu, então exibimos pelo menos "attempted"
-    if (submittedCode && cellStatus === "not_started") {
-      cellStatus = "attempted";
     }
 
     // Try to fetch AI consolidation analysis

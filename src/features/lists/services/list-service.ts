@@ -217,6 +217,7 @@ export const listService = {
       status: "open" | "closed";
       started_at: string | null;
       closed_at: string | null;
+      submitted_code?: string | null;
     };
 
     const sessionResults = await Promise.all(
@@ -242,7 +243,7 @@ export const listService = {
     const cells: SubmissionCell[] = activeStudents.flatMap((stu) =>
       visibleProblems.map((p) => {
         const s = sessionMap.get(`${stu.id}:${p.id}`);
-        const status = !s ? "not_started" : s.status === "closed" ? "delivered" : "attempted";
+        const status = !s ? "not_started" : s.submitted_code ? "delivered" : "attempted";
         return {
           studentId: stu.id,
           problemId: p.id,
